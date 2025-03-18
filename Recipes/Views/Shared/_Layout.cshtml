@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunger Helper - Recipe Website</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+    <style>
+        .navbar {
+            background-color: #5a416c !important;
+            height: 10vh;
+        }
+
+        body {
+            color: #3d171b !important;
+            background-color: #fdf8f6 !important;
+            font-family: "Century Gothic", sans-serif;
+        }
+
+        .btn-dark {
+            background-color: #3d171b !important;
+            border-color: #3d171b !important;
+        }
+
+        .btn-dark:hover {
+            background-color: #58383b !important;
+            border-color: #58383b !important;
+        }
+
+        .form-check-input:checked {
+            border-color: #dc3545 !important;
+            background-color: #dc3545 !important;
+        }
+
+        .form-check-input:focus, .form-control:focus, .form-select:focus {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.25rem #e3a8ae;
+        }
+
+        .btn-success {
+            background-color: #09857f;
+            border: #09857f;
+        }
+
+        .btn-success:hover {
+            background-color: #086662;
+            border: #086662;
+        }
+
+        .btn-danger {
+            background-color: #c84854;
+            border: #c84854;
+        }
+
+        #create-link {
+            color: #FF7C43;
+        }
+
+        #create-link:hover {
+            color: #ff4d00;
+        }
+        #title {
+            font-size: 24px;
+        }
+        footer {
+            background-color: #3d171b !important;
+            color: white !important;
+            padding: 3rem 3rem 0.5rem 3rem;
+        }
+        #footer-container {
+            display: grid;
+            grid-template: "a b c";
+          
+        }
+        #footer-container a {
+            color: white!important;
+            text-decoration:none;
+        }
+        #footer-container a:hover {
+            color: white!important;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bolder" href="/Recipes/Index" id="title"><i class="fa-solid fa-burger"></i> Hunger Helper</a>
+            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" title="Toggle navigation" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+                    <li>@Html.ActionLink("Recipes", "Index", "Recipes", new { area = "" }, new { @class = "nav-link" })</li>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li>@Html.ActionLink("Recipe Groups", "UserGroups", "Groups", new { area = "" }, new { @class = "nav-link" })</li>
+                    }
+
+                    @if (User.IsInRole("Author"))
+                    {
+                        <li>@Html.ActionLink("Create Recipe", "Create", "Recipes", new { area = "" }, new { @class = "nav-link", @id = "create-link" }) </li>
+
+                    }
+                </ul>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+    </nav>
+    <div class="container body-content">
+        @RenderBody()
+
+    </div>
+    <footer>
+        <div id="footer-container">
+            <div>
+                <h3 class="fw-bold"><i class="fa-solid fa-burger"></i> Hunger Helper</h3>
+            </div>
+            <div>
+                <h5 class="fw-bold">CONTACT</h5>
+                <p>natalija.naseva@students.finki.ukim.mk</p>
+                <p>+389 07 123 456</p>
+            </div>
+            <div>
+                <h5 class="fw-bold">RECIPES</h5>
+                <div><a href="/Recipes">Find Recipes</a></div>
+                <div><a href="/Users/UserProfile">My Profile</a></div>
+                <div><a href="/Account/Login">Create/View Recipes</a></div>
+            </div>
+        </div>
+        <hr />
+        <div>&copy;@DateTime.Now.Year - Hunger Helper</div>
+
+    </footer>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

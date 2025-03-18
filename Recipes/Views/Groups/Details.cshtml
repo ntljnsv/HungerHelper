@@ -1,0 +1,135 @@
+﻿@model Recipes.Models.RecipeUtil.RecipeGroupDTO
+
+@{
+    ViewBag.Title = "Details";
+}
+
+
+<h2>@Model.Name</h2>
+<hr />
+<div>
+    <p class="text-end"><b>Current recipes: </b>@Model.Recipes.Count</p>
+</div>
+<div id="recipe-container" class="d-grid">
+    @foreach (var recipe in Model.Recipes)
+    {
+        <div class="recipeCard card" id="@recipe.Id" >
+            @if (recipe.FirstPhotoPath != null)
+            {
+                <img class="card-img-top" src="@Url.Content(recipe.FirstPhotoPath)" />
+            }
+            <div class="card-body">
+                <h5 class="card-title fw-bold">@Html.ActionLink(recipe.Title, "Details", "Recipes", new { id = recipe.Id, @class = "card-text" }, null)</h5>
+
+                @if (!string.IsNullOrWhiteSpace(recipe.AuhtorId))
+                {
+                    <h6 class="card-subtitle fw-bold">@Html.ActionLink(recipe.AuthorName, "UserProfile", "Users", new { id = recipe.AuhtorId, @class = "card-text" }, null)</h6>
+                }
+                @if (ViewBag.userId == Model.UserId)
+                {
+                    <div class="text-end">
+                        <button class="btn btn-danger" onclick="removeRecipe()">Remove</button>
+                    </div>
+                }
+            </div>
+
+        </div>
+
+    }
+
+
+</div>
+
+@if (Model.UserId == ViewBag.userId)
+{
+    <p>
+        <button class="btn btn-danger m-2" style="font-size: 20px" onclick="deleteGroup()">Delete</button>
+    </p>
+}
+<div class="p-5"></div>
+
+
+<style>
+    #recipe-container {
+        grid-template: "1fr 1fr 1fr";
+        grid-gap: 10px;
+        align-items: end;
+  
+    }
+
+    .recipeCard a {
+        color: #3d171b;
+    }
+
+    .card {
+        background-color: #fef4ef;
+        height: fit-content;
+    }
+
+        .card:hover {
+            transform: scale(0.98);
+        }
+
+    .card-img-top {
+        width: 100% !important;
+        height: 18vh !important;
+        object-fit: cover !important;
+    }
+</style>
+
+@section Scripts {
+    <script>
+
+        function deleteGroup() {
+            url = "/Groups/Delete/@Model.Id";
+            console.log(url);
+            fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete');
+                }
+                window.location.href = '@Url.Action("UserProfile", "Users")';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+
+        var recipeContainer;
+
+        function removeRecipe(recipeId) {
+            var container = document.getElementById("recipe-container");
+            var recipeCard = document.getElementById(recipeId);
+            var groupId = '@Model.Id';
+            var data = {
+                recipeId: recipeId,
+                groupId: groupId
+            };
+            url = "/api/GroupsAPI/remove-recipe";
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error("Unable to remove recipe");
+                }
+                return response.json();
+            }).then(data => {
+                alert(data.Message);
+                container.removeChild(recipeCard);
+            }).catch(err => {
+                console.log(err);
+            })
+        }
+
+
+    </script>
+}

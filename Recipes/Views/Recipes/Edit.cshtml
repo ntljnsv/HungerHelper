@@ -1,0 +1,152 @@
+﻿@model Recipes.Models.RecipeUtil.CreateRecipeVM
+
+@{
+    ViewBag.Title = "Edit";
+}
+
+
+@using (Html.BeginForm("Edit", "Recipes", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    
+<div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(model => model.Id)
+    <div class="form-group row">
+        <h3 class="col-md-1 fw-bold">Title</h3>
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <hr />
+
+    <div id="content" class="m-2 d-flex flex-wrap justify-content-center">
+        @for (var i = 0; i < Model.Contents.Count; i++)
+        {
+            var content = Model.Contents[i];
+            var tName = "Contents[" + i + "]";
+            if (content is Recipes.Models.Recipes.RecipeText text)
+            {
+                <div class="form-group d-flex w-100 m-2">
+                    <textarea name="@(tName+".Text")" class="form-control text-content" rows="8">@text.Text</textarea>
+                    <input type="hidden" name="@(tName+".Order")" value="@i" />
+                    <input type="hidden" name="@(tName+".ContentType")" value="Text" />
+                </div>
+
+            }
+            if (content is Recipes.Models.Recipes.RecipePhoto photo)
+            {
+                <div class="form-group d-flex w-100 justify-content-center align-items-center" style="max-width: 100%;">
+                    <img style="width: 75%;" src="@Url.Content(photo.Path)" />
+                    <input type="file" name="@(tName+".Path")" class="form-control m-3" accept="image/*" />
+                    <input type="hidden" name="@(tName+".Order")" value="@i" />
+                    <input type="hidden" name="@(tName+".ContentType")" value="Photo" />
+                </div>
+
+            }
+        }
+    </div>
+
+    <div class="card w-75 p-5 m-4" id="recipe-card">
+        <div>
+            <div class="form-group row">
+                <span class="col-md-2"><i class="fa-solid fa-egg"></i> <b>Category</b></span>
+                <div class="col-md-4">
+                    @Html.DropDownListFor(model => model.Category, new SelectList(Model.Categories), "Select Category", new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.Category, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group row card-text">
+                <span class="col-md-4"><i class="fa-solid fa-clock"> </i><b>Time Needed:</b></span>
+                <div class="col-md-2">
+                    @Html.EditorFor(model => model.TimeNeeded, new { htmlAttributes = new { @class = "form-control d-inline", @placeholder = "Time needed" } })
+                    @Html.ValidationMessageFor(model => model.TimeNeeded, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group row card-text">
+                <span class="col-md-4"><i class="fa-solid fa-utensils"></i> <b>Number of Servings:</b></span>
+                <div class="col-md-2">
+                    @Html.EditorFor(model => model.NumServings, new { htmlAttributes = new { @type = "number", @class = "form-control d-inline", @placeholder = "Number of servings", @min = "1" } })
+                    @Html.ValidationMessageFor(model => model.NumServings, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div id="ingredients">
+            <h5 class="card-subtitle fw-bold">Ingredients</h5>
+            <div class="form-group">
+                <ul class="ingredients list-group list-group-flush">
+                    @for (var i = 0; i < Model.Ingredients.Count; i++)
+                    {
+                        var iName = "Ingredients[" + i + "]";
+                        var ingredient = Model.Ingredients[i];
+                        <li class="ingredient list-group-item w-100">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <input placeholder="Name" class="form-control" type="text" value=@ingredient.Ingredient.Name name="@(iName+".Ingredient.Name")" />
+                                </div>
+                                <div class="col-md-2">
+                                    <input placeholder="Quantity" class="form-control" type="number" min="0" value=@ingredient.Quantity name="@(iName+".Quantity")" />
+                                </div>
+                                <div class="col-md-2">
+                                    <input placeholder="Unit" class="form-control" type="text" value="@ingredient.Unit" name="@(iName+".Unit")" />
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <h5 class="card-subtitle fw-bold">Steps</h5>
+            <div class="form-group">
+                <ol class="steps list-group-numbered">
+                    @for (var i = 0; i < Model.Steps.Count; i++)
+                    {
+                        var sName = "Steps[" + i + "]";
+                        var step = Model.Steps[i];
+                        <li class="list-group-item">
+                            <div class="d-inline">
+                                <input placeholder="Description" class="form-control d-inline step" type="text" value="@step.Description" name="@(sName+".Description")" />
+                                <input type="hidden" value="@step.StepNumber" name="@(sName+".StepNumber")" />
+                            </div>
+                        </li>
+                    }
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group p-3">
+        <div class="col-md-offset-2 col-md-10t text-end ">
+            <input type="submit" value="Save" class="btn btn-success" />
+        </div>
+    </div>
+</div>
+}
+
+
+<style>
+    .step {
+        max-width: 80%;
+    }
+    #recipe-card, #recipe-card li {
+        background-color: #e8e1e5;
+    }
+    .btn-success {
+        font-weight: bold;
+        font-size: 20px;
+    }
+    .text-content {
+        max-width: 98%;
+        min-width: 98%;
+    }
+</style>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

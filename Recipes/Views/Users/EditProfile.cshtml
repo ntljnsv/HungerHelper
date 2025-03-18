@@ -1,0 +1,105 @@
+﻿@model Recipes.Models.ProfileUtil.EditProfileVM
+
+@{
+    ViewBag.Title = "Edit";
+}
+
+<h2>Edit your profile</h2>
+
+
+@using (Html.BeginForm("EditProfile", "Users", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+
+<div class="form-horizontal">
+    <hr />
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+
+    <div class="d-flex align-items-center">
+        <div class="form-group" id="img-container">
+            <img src="@Url.Content(Model.PicturePath)" id="profile-img" />
+        </div>
+
+        <div class="form-group d-inline p-4">
+            <h6 class="text-center">Upload a new profile picture</h6>
+            <input class="form-control" type="file" name="file" />
+        </div>
+    </div>
+
+    <div id="profile-data" class="d-grid">
+        <div class="card container" id="details">
+            <h4 class="card-title">Details</h4>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="Name" class="control-label col-md-2"><b>Name:</b></label>
+                    <div class="col-md-10  d-inline">
+                        @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="card container" id="bio">
+            <h6 class="card-title">Bio</h6>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="Bio" class="control-label col-md-2"><b>Bio:</b></label>
+                    <div class="col-md-10">
+                        <textarea class="form-control" id="Bio" name="Bio" value="@Model.Bio">@Model.Bio</textarea>
+                        @Html.ValidationMessageFor(model => model.Bio, "", new { @class = "text-danger" })
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <div class="form-group p-2">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Save" class="btn btn-success" style="font-size: 20px" />
+        </div>
+    </div>
+</div>
+
+}
+
+
+<style>
+    #img-container {
+        border: 4px solid #F69A6D;
+        border-radius: 50%;
+        overflow: hidden;
+        height: 225px;
+        width: 225px;
+    }
+
+    #profile-img {
+        height: 225px;
+        width: 225px;
+    }
+
+    #profile-data {
+        grid-template: "a b";
+        grid-gap: 20px;
+        margin: 20px;
+    }
+
+    #details {
+        background-color: #fddfd2;
+    }
+
+    #bio {
+        background-color: #dcd5da;
+    }
+
+</style>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

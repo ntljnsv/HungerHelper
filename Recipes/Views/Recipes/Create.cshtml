@@ -1,0 +1,266 @@
+﻿@model Recipes.Models.RecipeUtil.CreateRecipeVM
+
+@{
+    ViewBag.Title = "Create";
+}
+
+
+@using (Html.BeginForm("Create", "Recipes", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    
+<div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    <div class="form-group row">
+        <h3 class="col-md-1 fw-bold">Title</h3>
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control", @placeholder = "Title" } })
+            @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <hr />
+
+    <h5>Recipe Text and Photos</h5>
+    <div id="content-container">
+        <div class="form-group d-grid gap-2">
+            <button type="button" id="add-text" class="btn content-btn m-2">
+                <div>+</div>
+                <div>Add Text</div>
+            </button>
+        </div>
+
+        <div class="form-group d-grid gap-2">
+            <button type="button" id="add-img" class="btn content-btn m-2">
+                <div>+</div>
+                <div>Add Photo</div>
+            </button>
+        </div>
+    </div>
+
+    <div class="card w-75 p-5 m-4" id="recipe-card">
+        <div>
+            <div class="form-group row">
+                <span class="col-md-2"><i class="fa-solid fa-egg"></i> <b>Category</b></span>
+                <div class="col-md-4">
+                    @Html.DropDownListFor(model => model.Category, new SelectList(Model.Categories, "Category"), "Select Category", new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.Category, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group row card-text">
+                <span class="col-md-4"><i class="fa-solid fa-clock"></i> <b>Time Needed:</b></span>
+                <div class="col-md-2">
+                    @Html.EditorFor(model => model.TimeNeeded, new { htmlAttributes = new { @class = "form-control d-inline", @placeholder = "Time" } })
+                    @Html.ValidationMessageFor(model => model.TimeNeeded, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group row card-text">
+                <span class="col-md-4"><i class="fa-solid fa-utensils"></i> <b>Number of Servings:</b></span>
+                <div class="col-md-2">
+                    @Html.EditorFor(model => model.NumServings, new { htmlAttributes = new { @type = "number", @class = "form-control d-inline", @placeholder = "#servings", @min = "1" } })
+                    @Html.ValidationMessageFor(model => model.NumServings, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+        <hr />
+
+
+        <div class="m-2">
+            <h5 class="card-subtitle fw-bold">Ingredients</h5>
+            <div class="form-group">
+                <ul class="ingredients list-group list-group-flush" id="ingredient-container">
+                    @for (var i = 0; i < 3; i++)
+                    {
+                        var iName = "Ingredients[" + i + "]";
+                        <li class="ingredient list-group-item w-100">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <input placeholder="Name" class="form-control" type="text" name="@(iName+".Ingredient.Name")" />
+                                </div>
+                                <div class="col-md-2">
+                                    <input placeholder="Quant." class="form-control" type="number" min="0" name="@(iName+".Quantity")" />
+                                </div>
+                                <div class="col-md-2">
+                                    <input placeholder="Unit" class="form-control" type="text" name="@(iName+".Unit")" />
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+                <button class="btn btn-dark" type="button" id="add-ingredients-btn">Add more ingredients</button>
+            </div>
+        </div>
+
+        <div class="m-2">
+            <h5 class="card-subtitle fw-bold">Steps</h5>
+            <div class="form-group">
+                <ol class="steps list-group-numbered" id="step-container">
+                    @for (var i = 0; i < 3; i++)
+                    {
+                        var sName = "Steps[" + i + "]";
+                        <li class="list-group-item">
+                            <div class="d-inline">
+                                <input placeholder="Description" class="form-control d-inline step" type="text" name="@(sName+".Description")" />
+                                <input type="hidden" value="@(i+1)" name="@(sName+".StepNumber")" />
+                            </div>
+                        </li>
+                    }
+                </ol>
+                <button class="btn btn-dark" type="button" id="add-steps-btn">Add more steps</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group p-3">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Create" class="btn btn-success fw-bold" style="font-size: 20px" />
+        </div>
+    </div>
+</div>
+}
+
+
+<style>
+    .step {
+        max-width: 80%;
+    }
+    .content-btn {
+        background-color: #fddfd2;
+        border-color: #ffd4c1;
+    }
+    .content-btn:hover {
+        background-color:#ffd4c1 ;
+    }
+    .text-content {
+        max-width: 98%;
+        min-width: 98%;
+    }
+    #recipe-card, #recipe-card li {
+        background-color: #e8e1e5;
+    }
+
+</style>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+<script>
+        function addTextImg() {
+            var order = 0;
+            var addTextBtn = document.getElementById("add-text");
+            var addImgBtn = document.getElementById("add-img");
+            var contentContainer = document.getElementById("content-container");
+
+            function addNewText() {
+                var currBtn = document.getElementById(`add-text`);
+                var container = currBtn.parentNode;
+                container.removeChild(currBtn);
+                container.classList.add("content", "w-100", "m-2");
+                container.innerHTML = `<textarea name="Contents[${order}].Text" class="form-control text-content" rows="8"></textarea>`;
+                container.innerHTML += `<input type="hidden" name="Contents[${order}].Order" value="${order}" />`;
+                container.innerHTML += `<input type="hidden" name="Contents[${order}].ContentType" value="Text" />`;
+
+                var newBtnDiv = document.createElement("div");
+                newBtnDiv.classList.add("form-group", "d-grid", "gap-2");
+                var newBtn = document.createElement("button");
+                newBtn.id = `add-text`;
+                newBtn.classList.add("btn", "content-btn");
+                newBtn.setAttribute("type", "button");
+                newBtn.innerHTML = `<div>+</div><div>Add Text</div>`;
+                newBtn.addEventListener("click", addNewText);
+                newBtnDiv.appendChild(newBtn);
+
+                contentContainer.appendChild(newBtnDiv);
+                order++;
+            }
+
+            addTextBtn.addEventListener("click", addNewText);
+
+
+            function addNewImg() {
+                var currBtn = document.getElementById(`add-img`);
+                var container = currBtn.parentNode;
+                container.removeChild(currBtn);
+                container.classList.add("content", "w-100", "m-2");
+                container.innerHTML = `<input type="file" name="Contents[${order}].Path" class="form-control img-content" accept="image/*"/>`;
+                container.innerHTML += `<input type="hidden" name="Contents[${order}].Order" value="${order}" />`;
+                container.innerHTML += `<input type="hidden" name="Contents[${order}].ContentType" value="Photo" />`;
+
+                var newBtnDiv = document.createElement("div");
+                newBtnDiv.classList.add("form-group", "d-grid", "gap-2");
+                var newBtn = document.createElement("button");
+                newBtn.id = `add-img`;
+                newBtn.classList.add("btn", "content-btn");
+                newBtn.setAttribute("type", "button");
+                newBtn.innerHTML = `<div>+</div><div>Add Photo</div>`;
+                newBtn.addEventListener("click", addNewImg);
+                newBtnDiv.appendChild(newBtn);
+
+                contentContainer.appendChild(newBtnDiv);
+                order++;
+            }
+
+            addImgBtn.addEventListener("click", addNewImg);
+        }
+
+
+        function addStepsOnClick() {
+            var steps = 2;
+            var btn = document.getElementById("add-steps-btn");
+            var container = document.getElementById("step-container");
+
+            function addInput() {
+                var input = document.createElement("li");
+                input.classList.add("list-group-item");
+                input.innerHTML = `<div class="d-inline">
+                    <input placeholder="Description" class="form-control d-inline step" type="text" name="Steps[${steps}].Description" />
+                    <input type="hidden" name="Steps[${steps}].StepNumber" value="${steps + 1}"/>
+                </div>`
+                steps++;
+                container.appendChild(input);
+            }
+
+            btn.addEventListener("click", addInput);
+        }
+
+
+        function addIngredientOnClick() {
+            var ingredients = 2;
+            var btn = document.getElementById("add-ingredients-btn");
+            var container = document.getElementById("ingredient-container");
+
+
+            function addInputs() {
+                var input = document.createElement("li");
+                input.classList.add("ingredient", "list-group-item", "w-100")
+
+                input.innerHTML = `<div class="row">
+                    <div class="col-md-4">
+                        <input placeholder="Name" class="form-control" type="text" name="Ingredients[${ingredients}].Ingredient.Name" />
+                    </div>
+                    <div class="col-md-2">
+                        <input placeholder="Quant." class="form-control" type="number" name="Ingredients[${ingredients}].Quantity" />
+                    </div>
+                    <div class="col-md-2">
+                        <input placeholder="Unit" class="form-control" type="text" name="Ingredients[${ingredients}].Unit" />
+                    </div>
+                </div>`;
+                ingredients++;
+                container.appendChild(input);
+            }
+            btn.addEventListener("click", addInputs)
+        }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            addTextImg();
+            addIngredientOnClick();
+            addStepsOnClick();
+        })
+
+
+
+
+</script>
+}

@@ -1,0 +1,471 @@
+﻿@using PagedList.Mvc
+@model Recipes.Models.ProfileUtil.ProfileVM
+
+@{
+    ViewBag.Title = "Profile";
+}
+
+@if (ViewBag.userId == Model.Id)
+{
+    <p class="text-end" id="edit-btn">
+        <button class="btn btn-success fw-bold"> @Html.ActionLink("Edit Profile", "EditProfile", new { id = Model.Id })</button>
+    </p>
+}
+
+<div class="d-flex align-items-center">
+    <div id="img-container">
+        <img class="w-100" src="@Url.Content(Model.PicturePath)" />
+    </div>
+    <h2 class="d-inline p-4 fw-bold">@Model.Name's Profile</h2>
+
+</div>
+
+
+<div id="profile-data" class="d-grid">
+    <div class="card container p-2" id="details">
+        <h4 class="card-title"><i class="fa-solid fa-circle-info"></i> Details</h4>
+        <div class="card-body">
+            <div class="card-text"><b>Name:</b> @Model.Name</div>
+            <div class="card-text"><b>E-mail:</b> @Model.Email</div>
+        </div>
+
+    </div>
+    <div class="card container p-2" id="bio">
+        <h6 class="card-title"><i class="fa-solid fa-hand-spock"></i> Bio</h6>
+        <div class="card-body">
+            <div class="card-text">@Model.Bio</div>
+        </div>
+
+    </div>
+</div>
+
+
+
+@if (Model.Recipes != null && Model.Recipes.Any())
+{
+    <hr />
+    if (ViewBag.userId == Model.Id)
+    {
+        <h4 class="fw-bold"><i class="fa-solid fa-file"></i> Your Recipes</h4>
+    }
+    else
+    {
+        <h4 class="fw-bold"><i class="fa-solid fa-file"></i> @Model.Name's Recipes</h4>
+    }
+
+    <div id="alert-container"></div>
+    <div>
+        <label for="sortOrder">Sort by:</label>
+        <select class="form-select d-inline" id="sortOrder" name="sortOrder" onchange="loadSorted()">
+            <option value="date" @(ViewBag.sortOrder == "date" ? "selected" : "")>Date</option>
+            <option value="title" @(ViewBag.sortOrder == "title" ? "selected" : "")>Title</option>
+            <option value="likes" @(ViewBag.sortOrder == "likes" ? "selected" : "")>Likes</option>
+        </select>
+    </div>
+
+    <div>
+        <div class="overlay-alert" id="recipe-alert"></div>
+
+        <div id="recipes-container">
+            @Html.Partial("_RecipePartial", Model)
+        </div>
+
+
+    </div>
+
+}
+
+
+
+
+@if (Model.LikedRecipes != null && Model.LikedRecipes.Any())
+{
+    <hr />
+    <h4 class="fw-bold"><i class="fa-solid fa-heart"></i> Liked Recipes</h4>
+    <div>
+        <label for="sortOrder">Sort by:</label>
+        <select id="sortOrder" class="form-select d-inline" name="sortOrder" onchange="loadSorted()">
+            <option value="date" @(ViewBag.sortOrder == "date" ? "selected" : "")>Date</option>
+            <option value="title" @(ViewBag.sortOrder == "title" ? "selected" : "")>Title</option>
+            <option value="likes" @(ViewBag.sortOrder == "likes" ? "selected" : "")>Likes</option>
+            <option value="author" @(ViewBag.sortOrder == "author" ? "selected" : "")>Author</option>
+        </select>
+    </div>
+
+    <div id="recipes">
+
+        <div id="recipes-container">
+            @Html.Partial("_RecipePartial", Model)
+        </div>
+    </div>
+}
+
+<hr />
+
+<div>
+    <h4 class="fw-bold"><i class="fa-solid fa-star"></i> Recipe Groups</h4>
+    @if (ViewBag.userId == Model.Id)
+    {
+        <div>
+            <div class="text-end">
+                <button class="btn btn-dark" onclick="displayModal()">Create new Recipe Group</button>
+            </div>
+            <div class="modal fade" id="createGroupModal" tabindex="-1" role="dialog" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="createGroupModalLabel">Create New Group</h5>
+                            <button type="button" class="close btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="createGroupForm" method="post">
+                                <div class="form-group">
+                                    <label for="group-name">Group Name</label>
+                                    <input type="text" class="form-control" id="group-name" name="Name" required>
+                                </div>
+                                <div class="p-1">
+                                    <button type="button" onclick="createNewGroup()" class="btn btn-dark">Create Group</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div id="group-alert" class="overlay-alert"></div>
+    <div id="recipe-groups" class="d-grid"></div>
+    <div id="groups-link" class="text-end fw-bold"><a href="/Groups/UserGroups/@Model.Id">View groups page...</a></div>
+</div>
+
+
+
+
+
+
+
+
+<style>
+    #groups-link a {
+        color: #dc3545 !important;
+        text-decoration: dotted;
+    }
+
+    #groups-link {
+        margin-bottom: 50px;
+    }
+
+    .overlay-alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        display: none;
+        width: 500px;
+    }
+
+    #edit-btn {
+        position: relative;
+        top: 30px;
+        float: right;
+        display: inline;
+    }
+
+    .page-link {
+        background-color: #756382 !important;
+        border-color: #756382 !important;
+        color: white;
+        margin-left: 2px;
+        margin-right: 2px;
+    }
+
+        .page-link:hover, .page-link:active, .page-link:focus {
+            box-shadow: 0 0 0 0.25rem #e3a8ae;
+            color: #e3a8ae !important;
+        }
+
+    .btn-success a {
+        color: white !important;
+        text-decoration: none;
+    }
+
+    #img-container {
+        border: 4px solid #F69A6D;
+        border-radius: 50%;
+        overflow: hidden;
+        height: 225px;
+        width: 225px;
+    }
+
+    #profile-data {
+        grid-template: "a b";
+        grid-gap: 20px;
+        margin: 20px;
+    }
+
+    #details {
+        background-color: #fddfd2;
+    }
+
+    #bio {
+        background-color: #dcd5da;
+    }
+
+    #recipe-groups {
+        grid-template: "a b c d";
+        padding-top: 10px;
+        margin-bottom: 20px;
+    }
+
+    .group {
+        background-color: #ffe98b;
+        border-radius: 10%;
+        min-width: 150px;
+        max-width: 150px;
+        min-height: 150px;
+        max-height: 150px;
+        border: 1px solid #decc7e;
+    }
+
+        .group:hover {
+            transform: scale(0.98);
+        }
+
+    .card a {
+        color: #3d171b;
+    }
+
+    .group a {
+        color: #3d171b;
+    }
+
+    .form-select {
+        width: 10vw !important;
+    }
+
+    .card {
+        background-color: #fef4ef;
+    }
+
+        .card:hover {
+            transform: scale(0.98);
+        }
+
+    .card-img-top {
+        width: 100% !important;
+        height: 18vh !important;
+        object-fit: cover !important;
+    }
+</style>
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+    var modelId = "@Model.Id";
+    var userId = "@ViewBag.userId";
+
+
+    function showAlert(container, group) {
+        var alert = document.getElementById(container);
+        alert.innerHTML = `
+        <div role="alert" class="alert alert-success alert-dismissible fade show">
+            <strong>Success!</strong> The recipe ${group} was successfully deleted.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`
+
+        alert.style.display = 'block';
+
+        setTimeout(function () {
+            alert.style.display = 'none';
+        }, 5000);
+    }
+
+    function deleteRecipe(recipeId) {
+        var container = document.getElementById("recipes");
+        var recipeCard = document.getElementById(recipeId);
+        var url = `/api/RecipesAPI/${recipeId}`;
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error("Unable to delete recipe");
+            }
+            return response.json();
+        }).then(data => {
+            showAlert("recipe-alert", "");
+            container.removeChild(recipeCard);
+        }).catch(err => {
+            console.log(err);
+        })
+    }
+
+
+    function displayModal() {
+        var modal = new bootstrap.Modal(document.getElementById('createGroupModal'));
+        modal.show();
+    }
+
+    function createNewGroup() {
+        var groupName = document.getElementById("group-name").value;
+        if (groupName == null || groupName == "") value = "Unnamed";
+        var url = "/api/GroupsAPI";
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(groupName)
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error("Could not create new recipe group");
+            }
+            console.log("response is okay")
+            return response.json();
+        }).then(data => {
+            var modal = bootstrap.Modal.getInstance(document.getElementById('createGroupModal'));
+            modal.hide();
+            var card = recipeGroupCard(data);
+            document.getElementById("recipe-groups").appendChild(card);
+        }).catch(err => {
+            console.log(err);
+        }).finally(() => {
+            document.getElementById("group-name").value = "";
+        })
+    }
+
+    function recipeGroupCard(data) {
+        var card = document.createElement("div");
+        card.classList.add("group", "container", "p-2", "d-flex", "flex-wrap", "justify-content-around");
+        card.id = data.Id;
+        card.innerHTML = `<h5 class="w-100 text-center fw-bold" ><a href="/Groups/Details/${data.Id}">${data.Name}</a></h5>` +
+            `<div><b>#Recipes: </b>${data.Count}</div>`;
+        if (userId == modelId) {
+            card.innerHTML += `<button class="btn btn-danger" onclick="deleteGroup(${data.Id})" style="height: 35px;">Delete</button>`;
+        }
+        return card;
+    }
+
+
+
+    function deleteGroup(groupId) {
+        var container = document.getElementById("recipe-groups");
+        var groupCard = document.getElementById(groupId);
+        url = `/api/GroupsAPI/delete-group/${groupId}`;
+        fetch(url, {
+            method: "DELETE",
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error("Unable to delete group");
+            }
+            return response.json();
+        }).then(data => {
+            showAlert("group-alert", "group")
+            container.removeChild(groupCard);
+        }).catch(err => {
+            console.log(err);
+        })
+
+    }
+
+    function addGroups(data) {
+        var container = document.getElementById("recipe-groups");
+        container.innerHTML = "";
+        data.forEach(g => {
+            var card = recipeGroupCard(g);
+            container.appendChild(card);
+        })
+    }
+
+
+    function getRecipeGroups() {
+        var url = `/api/GroupsAPI/user-groups/`+'@Model.Id';
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error("Unable to display groups");
+            }
+            return response.json();
+        }).then(data => {
+            addGroups(data);
+        }).catch(err => {
+            console.log(err);
+        })
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        getRecipeGroups();
+        addStyles();
+    })
+
+    function addStyles() {
+        var pagination = document.getElementsByClassName("pagination")[0];
+        var li = pagination.getElementsByTagName("li");
+        for (var i = 0; i < li.length; i++) {
+            li[i].classList.add("page-item");
+        }
+        var a = pagination.getElementsByTagName("a");
+        for (var i = 0; i < a.length; i++) {
+            a[i].classList.add("page-link");
+        }
+    }
+
+
+    document.addEventListener("click", function (event) {
+        if (event.target.matches(".pagination a")) {
+            event.preventDefault();
+            const url = event.target.href;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Error loading paginated recipes");
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('recipes-container').innerHTML = html;
+                    addStyles();
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
+    });
+
+    function loadSorted() {
+        var sortOrder = document.getElementById("sortOrder").value;
+        var page = 1;
+        const url = `/Users/GetRecipes/${modelId}?page=${page}&sortOrder=${sortOrder}`;
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error loading sorted recipes");
+                }
+                return response.text();
+            })
+            .then(html => {
+                document.getElementById('recipes-container').innerHTML = html;
+                addStyles();
+            })
+            .catch(err => {
+                console.error(err);
+            });
+    }
+
+
+    </script>
+}

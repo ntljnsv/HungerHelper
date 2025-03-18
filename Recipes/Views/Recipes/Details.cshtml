@@ -1,0 +1,442 @@
+﻿@model Recipes.Models.RecipeUtil.RecipeDetails
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<div id="titleAndEdit" class="d-grid">
+    <h2 class="fw-bold">@Model.Title</h2>
+    @if (Model.AuthorId == ViewBag.userId)
+    {
+        <div>
+            <button class="btn btn-success block">@Html.ActionLink("Edit", "Edit", new { id = Model.Id })</button>
+            <button class="btn btn-danger block fw-bold" type="button" onclick="deleteRecipe()">Delete</button>
+        </div>
+    }
+</div>
+
+
+<div>
+    <hr />
+    <div class="d-grid" id="recipe-data">
+        <div>
+            <h5 class="d-inline fw-bold">@Html.ActionLink(Model.Author.UserName, "UserProfile", "Users", new { id = Model.AuthorId }, null)</h5>
+            | <div class="d-inline"><i>Created at: @Model.CreatedAt</i></div>
+        </div>
+        <div>
+            <span><i class="fa-solid fa-heart"></i> <b>Likes: </b>@Model.LikeCount</span> |
+            <span><i class="fa-solid fa-comment"></i> <b><a href="#comment-section">Comments: </a></b>@Model.Comments.Count</span>
+        </div>
+    </div>
+    <div id="jump-link">
+        <i class="fa-solid fa-circle-down"></i>
+        <a class="fw-bold" id="jump-link" href="#recipe-card"> Jump to recipe</a>
+    </div>
+    <div id="content" class="container d-flex flex-wrap justify-content-center">
+        @foreach (var content in Model.Contents.OrderBy(m => m.Order))
+        {
+            if (content is Recipes.Models.Recipes.RecipeText text)
+            {
+                <div style="width:100%" class="p-2">@text.Text</div>
+            }
+            else if (content is Recipes.Models.Recipes.RecipePhoto photo)
+            {
+                <div style="max-width: 100%" class="p-2">
+                    <img style="width: 100%" src="@Url.Content(photo.Path)" />
+                </div>
+                
+            }
+        }
+    </div>
+
+    <div class="card w-75 p-5 m-4" id="recipe-card">
+        <h4 class="card-title fw-bold">@Model.Title</h4>
+        <div>
+            <span class="card-text"><i class="fa-solid fa-pen-nib"></i> <b>Author:</b> @Html.ActionLink(Model.Author.UserName, "UserProfile", "Users", new { id = Model.AuthorId }, null)</span>
+            <span class="card-text"><i class="fa-solid fa-clock"></i> <b>Time Needed: </b> @Model.TimeNeeded</span>
+            <div class="d-inline card-text">
+                <label for="change-servings"><i class="fa-solid fa-utensils"></i> <b>Number of Servings:</b></label>
+                <input class="form-control d-inline" value="@Model.NumServings" id="change-servings" type="number" onchange="changeServings()" />
+            </div>
+        </div>
+        <hr />
+        <div class="card-body">
+            <div id="ingredients">
+                <h5 class="card-subtitle fw-bold">Ingredients</h5>
+                <ul class="ingredient list-group list-group-flush">
+                    @foreach (var ingredient in Model.RecipeIngredients)
+                    {
+                        <li class="ingredient list-group-item w-75">
+                            <input type="checkbox" class="form-check-input me-1" id="@ingredient.IngredientId" />
+                            <label class="form-check-label" for="@ingredient.IngredientId">
+                                <span class="ing-quantity card-text" data-quantity="@ingredient.Quantity">@ingredient.Quantity</span>
+                                <span class="card-text">@ingredient.Unit</span>
+                                <span class="card-text">@ingredient.Ingredient.Name</span>
+                            </label>
+                        </li>
+                    }
+                </ul>
+                @if (Model.RecipeIngredients.Count == 0)
+                {
+                    <p>No ingredients have been added</p>
+                }
+            </div>
+            <div id="steps">
+                <h5 class="card-subtitle fw-bold">Steps</h5>
+                <ol class="list-group-numbered">
+                    @foreach (var step in Model.Steps.OrderBy(s => s.StepNumber))
+                    {
+                        <li class="list-group-item card-text">@step.Description</li>
+                    }
+                </ol>
+                @if (Model.Steps.Count == 0)
+                {
+                    <p>No steps have been added</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div  id="overlay-alert">
+
+</div>
+
+@if (User.Identity.IsAuthenticated)
+{
+    <div id="likesAndGroups" class="d-grid">
+        <div>
+            <button id="like-btn" data-recipe-id="@Model.Id" class="btn btn-dark btn-lg" onclick="likeRecipe()">
+                <i class="fa-solid fa-heart"></i> Like
+                <span id="like-count">@Model.LikeCount</span>
+            </button>
+        </div>
+        <div>
+            <h5><i class="fa-solid fa-star"></i> Add to your groups</h5>
+            <select class="form-select" onchange="addToGroup()" id="group-select">
+                <option value="">Select a group</option>
+                @foreach (var group in Model.UserGroups)
+                {
+                    <option value="@group.Id" name="group" id="@group.Name">@group.Name</option>
+                }
+            </select>
+        </div>
+
+    </div>
+}
+
+
+
+<hr />
+
+<div id="comment-section">
+    <h3 class="fw-bold">Comments</h3>
+    <p>
+        We would love to hear your opinion on this recipe. Have you tried making it? Did you like it? Would you change anything?<br />
+        Submit your review or question here!
+    </p>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="d-flex w-100 flex-wrap">
+            <div class="img-container"><img class="w-100" src=@Url.Content(ViewBag.UserProfilePicture) /></div>
+            <div class="d-inline comment-username">
+                <div class="d-inline">@Html.ActionLink(User.Identity.Name, "UserProfile", "Users", new { id = ViewBag.UserId }, null)</div>
+                <textarea rows="2" maxlength="350" class="form-control comment-width" id="comment-input" placeholder="Share your opinion here(Maximum length is 350)..."></textarea>
+            </div>
+            <div id="comment-btn">
+                <button onclick="postComment()" type="button" class="btn btn-dark">Post comment</button>
+
+            </div>
+        </div>
+    }
+
+    <div id="comments">
+        @foreach (var comment in Model.Comments.OrderBy(c => c.CreatedAt))
+        {
+            <div class="d-flex w-100 flex-wrap">
+                <div class="img-container"><img class="w-100" src=@Url.Content(comment.User.PicturePath) /></div>
+                <div class="d-inline comment-username">
+                    <div class="d-inline">@Html.ActionLink(comment.User.UserName, "UserProfile", "Users", new { id = comment.User.Id }, null)</div>
+                    <div class="comment-width comment-content p-2">@comment.Content</div>
+                </div>
+                <div class="text-end w-100 comment-created">@comment.CreatedAt</div>
+            </div>
+        }
+    </div>
+</div>
+
+
+<style>
+    #comments {
+        margin-bottom: 30px;
+    }
+
+    #jump-link {
+        color: #dc3545;
+    }
+    #jump-link:hover a {
+        color: #e56c78
+    }
+    .btn-success {
+        background-color: #09857f;
+        border: #09857f;
+    }
+
+    .btn-success:hover {
+        background-color: #086662;
+        border: #086662;
+    }
+
+    .btn-success a, .btn-danger a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .btn-danger {
+        background-color: #c84854;
+        border: #c84854;
+    }
+
+    #comment-section a {
+        color: #3d171b;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .comment-created {
+        color: #887375;
+    }
+
+    #comment-section {
+        padding: 0px 5vw !important;
+    }
+
+    .comment-content {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        min-height: 70px !important;
+        background-color: white;
+    }
+
+    .comment-width {
+        max-width: 100% !important;
+    }
+
+    .comment-username {
+        width: 92%;
+        padding-left: 1%;
+        margin-bottom: 5px;
+    }
+
+    #comment-btn {
+        width: 100%;
+        text-align: right;
+    }
+
+    #comment-btn btn {
+        width: 50vw;
+    }
+
+    .img-container {
+        height: 75px;
+        width: 75px;
+        border: 3px solid #F69A6D;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    #recipe-data {
+        grid-template: "a b";
+        justify-content: space-between;
+        margin-bottom: 3vh;
+    }
+
+    #recipe-data a {
+        color: #3d171b !important;
+        text-decoration: none !important;
+    }
+
+    #recipe-card, #recipe-card li {
+        background-color: #e8e1e5;
+    }
+
+    #recipe-card {
+        margin-bottom: 10vh;
+    }
+
+    #recipe-card a {
+        color: #3d171b !important;
+    }
+
+    #change-servings {
+        width: 10%;
+    }
+
+    #likesAndGroups {
+        grid-template: "a b";
+        justify-content: space-between;
+    }
+
+    #titleAndEdit {
+        grid-template: "a b";
+        justify-content: space-between;
+    }
+
+
+    #overlay-alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        display: none;
+        width: 350px; 
+    }
+    .alert {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+
+    function deleteRecipe() {
+        var url = `/api/RecipesAPI/@Model.Id`;
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to delete');
+            }
+            window.location.href = '@Url.Action("UserProfile", "Users")';
+        }).catch(err => {
+            console.error('Error:', error);
+        });
+
+
+    }
+
+
+    function showAlert(msg) {
+        const alertDiv = document.getElementById('overlay-alert');
+        alertDiv.innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            ${msg}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+
+        alertDiv.style.display = 'block';
+
+        setTimeout(function () {
+            alertDiv.style.display = 'none';
+        }, 5000);
+    }
+
+
+    function addToGroup() {
+        var groupId = document.getElementById("group-select").value;
+        if (groupId == null || groupId == "") return;
+        var url = "/api/GroupsAPI/add-recipe";
+        var data = {
+            recipeId: parseInt('@Model.Id'),
+            groupId: parseInt(groupId)
+        };
+        console.log(data);
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error("Unable to add to group");
+            }
+            return response.json();
+        }).then(data => {
+            showAlert(data.Message)
+        }).catch(err => {
+            console.log(err);
+        })
+    }
+
+    function changeServings() {
+        var numServings = parseFloat(@Model.NumServings);
+        var factor = parseFloat(document.getElementById("change-servings").value);
+        if (isNaN(factor)) return;
+        factor = factor / numServings;
+        var quantities = document.getElementsByClassName("ing-quantity");
+        for (q of quantities) {
+            q.textContent = parseFloat(q.dataset["quantity"]) * factor;
+        }
+    }
+
+    function likeRecipe() {
+        var id = document.getElementById("like-btn").dataset.recipeId;
+        url = "/api/RecipesAPI/like";
+        fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(parseInt(id))
+        }).then(response => {
+            return response.json();
+        }).then(data => {
+            if (data.success) {
+                document.getElementById("like-count").textContent = data.likeCount;
+            }
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+
+    function createComment(data) {
+        var comments = document.getElementById("comments");
+        var comment = document.createElement("div");
+        comment.classList.add("d-flex", "w-100", "flex-wrap");
+        comment.innerHTML = `<div class="img-container"><img class="w-100" src="${data.UserPhoto}"/></div>`;
+        comment.innerHTML +=  `<div class="d-inline comment-username">`+
+            `<div class="d-inline"><a href="/Users/UserProfile/${data.UserId}">${data.UserName}</a></div>`+
+            `<div class="comment-width comment-content p-2">${data.Content}</div></div>`+
+            `<div class="text-end w-100 comment-created">${data.CreatedAt}</div>`
+        comments.appendChild(comment);
+    }
+
+    function postComment() {
+        var id = '@Model.Id';
+        var commentContent = document.getElementById("comment-input").value;
+        if (commentContent == null || commentContent == "") {
+            return;
+        }
+        var url = "/api/RecipesAPI/comment/"+id;
+        fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(commentContent)
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error("Bad request");
+            }
+            return response.json();
+        }).then(data => {
+            createComment(data);
+            document.getElementById("comment-input").value = "";
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+
+
+    </script>
+}

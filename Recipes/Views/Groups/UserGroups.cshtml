@@ -1,0 +1,207 @@
+﻿@model List<Recipes.Models.RecipeUtil.RecipeGroupDTO>
+@{
+    ViewBag.Title = "UserGroups";
+}
+
+<h2 class="fw-bold" id="title"><a href="/Users/UserProfile/@ViewBag.UserId">@ViewBag.UserName's groups</a></h2>
+<hr />
+
+<div>
+    @if (ViewBag.UserId == ViewBag.CurrentUser)
+    {
+        <div>
+            <div class="d-flex justify-content-between">
+                <p>Total Groups:&nbsp;<span id="count">@Model.Count()</span> </p>
+                <button class="btn btn-dark" onclick="displayModal()">Create new Recipe Group</button>
+            </div>
+            <div class="modal fade" id="createGroupModal" tabindex="-1" role="dialog" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="createGroupModalLabel">Create New Group</h5>
+                            <button type="button" class="close btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="createGroupForm" method="post">
+                                <div class="form-group">
+                                    <label for="group-name">Group Name</label>
+                                    <input type="text" class="form-control" id="group-name" name="Name" required>
+                                </div>
+                                <div class="p-1">
+                                    <button type="button" onclick="createNewGroup()" class="btn btn-dark">Create Group</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+
+</div>
+<div id="recipe-groups">
+    <div id="group-alert" class="overlay-alert"></div>
+    @foreach (var Group in Model)
+    {
+        <div class="group container p-2 d-flex flex-wrap justify-content-around" id="@Group.Id">
+            <h5 class="w-100 text-center fw-bold">
+                <a href="/Groups/Details/@Group.Id">
+                    @Group.Name
+                </a>
+            </h5>
+            <div><b>#Recipes:</b>@Group.Count</div>
+            @if (ViewBag.UserId == ViewBag.CurrentUser)
+            {
+                <button class="btn btn-danger" style="height: 35px;" onclick="deleteGroup(@Group.Id)">Delete</button>
+            }
+        </div>
+    }
+
+</div>
+
+
+<style>
+    #title a {
+        color: #3d171b;
+        text-decoration: none !important;
+    }
+    #recipe-groups {
+        display: grid;
+        grid-template: "a b c d";
+        min-height: 60vh;
+        padding-top: 20px;
+    }
+    .overlay-alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        display: none;
+        width: 500px;
+    }
+    .group {
+        background-color: #ffe98b;
+        border-radius: 10%;
+        min-width: 200px;
+        max-width: 200px;
+        min-height: 150px;
+        max-height: 150px;
+        border: 1px solid #decc7e;
+    }
+    .group button {
+        width: 75%;
+    }
+    .group:hover {
+        transform: scale(0.98);
+    }
+
+    .group a {
+        color: #3d171b;
+        text-decoration: none !important;
+    }
+</style>
+
+@section Scripts {
+    
+<script>
+    var userId = "@ViewBag.CurrentUser";
+    var modelId = "@ViewBag.UserId";
+
+    function displayModal() {
+        var modal = new bootstrap.Modal(document.getElementById('createGroupModal'));
+        modal.show();
+    }
+
+
+    function showAlert(container, group) {
+        var alert = document.getElementById(container);
+        alert.innerHTML = `
+    <div role="alert" class="alert alert-success alert-dismissible fade show">
+        <strong>Success!</strong> The recipe ${group} was successfully deleted.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>`
+
+        alert.style.display = 'block';
+
+        setTimeout(function () {
+            alert.style.display = 'none';
+        }, 5000);
+    }
+
+    function deleteGroup(groupId) {
+        var container = document.getElementById("recipe-groups");
+        var groupCard = document.getElementById(groupId);
+        var countSpan = document.getElementById("count");
+        var count = parseInt(countSpan.innerHTML);
+        url = `/api/GroupsAPI/delete-group/${groupId}`;
+        fetch(url, {
+            method: "DELETE",
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error("Unable to delete group");
+            }
+            return response.json();
+        }).then(data => {
+            showAlert("group-alert", "group")
+            container.removeChild(groupCard);
+            count -= 1;
+            countSpan.innerHTML = count;
+        }).catch(err => {
+            console.log(err);
+        })
+
+    }
+
+    function createNewGroup() {
+        var groupName = document.getElementById("group-name").value;
+        if (groupName == null || groupName == "") value = "Unnamed";
+        var countSpan = document.getElementById("count");
+        var count = parseInt(countSpan.innerHTML);
+        var url = "/api/GroupsAPI";
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(groupName)
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error("Could not create new recipe group");
+            }
+            console.log("response is okay")
+            return response.json();
+        }).then(data => {
+            var modal = bootstrap.Modal.getInstance(document.getElementById('createGroupModal'));
+            modal.hide();
+            var card = recipeGroupCard(data);
+            document.getElementById("recipe-groups").appendChild(card);
+            count += 1;
+            countSpan.innerHTML = count;
+        }).catch(err => {
+            console.log(err);
+        }).finally(() => {
+            document.getElementById("group-name").value = "";
+        })
+    }
+
+    function recipeGroupCard(data) {
+        var card = document.createElement("div");
+        card.classList.add("group", "container", "p-2", "d-flex", "flex-wrap", "justify-content-around");
+        card.id = data.Id;
+        card.innerHTML = `<h5 class="w-100 text-center fw-bold" ><a href="/Groups/Details/${data.Id}">${data.Name}</a></h5>` +
+            `<div><b>#Recipes: </b>${data.Count}</div>`;
+        if (userId == modelId) {
+            card.innerHTML += `<button class="btn btn-danger" onclick="deleteGroup(${data.Id})" style="height: 35px;">Delete</button>`;
+        }
+        return card;
+    }
+
+
+ </script>    
+    
+}

@@ -1,0 +1,57 @@
+﻿@using PagedList.Mvc
+@model Recipes.Models.ProfileUtil.ProfileVM
+
+@if (Model.Recipes != null && Model.Recipes.Any())
+{
+    <div class="d-flex flex-wrap justify-content-center" id="recipes">
+        @foreach (var recipe in Model.Recipes)
+        {
+            <div class="recipeCard card w-50 m-3" id="@recipe.Id">
+                @if (recipe.FirstPhotoPath != null)
+                {
+                    <img class="card-img-top" src="@Url.Content(recipe.FirstPhotoPath)" />
+                }
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">@Html.ActionLink(recipe.Title, "Details", "Recipes", new { id = recipe.Id }, null)</h5>
+                    @if (ViewBag.userId == Model.Id)
+                    {
+                        <div class="text-end">
+                            <button class="btn btn-success">@Html.ActionLink("Edit", "Edit", "Recipes", new { id = recipe.Id }, null)</button>
+                            <button class="btn btn-danger" onclick="deleteRecipe(@recipe.Id)">Delete</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div id="pagination-container">
+        @Html.PagedListPager(Model.Recipes, page => Url.Action("GetRecipes", new { Id = Model.Id, page = page, sortOrder = ViewBag.sortOrder }))
+    </div>
+
+
+}
+@if (Model.LikedRecipes != null && Model.LikedRecipes.Any())
+{
+    <div class="d-flex flex-wrap justify-content-center">
+        @foreach (var recipe in Model.LikedRecipes)
+        {
+            <div class="recipeCard card w-50" id="@recipe.Id">
+                @if (recipe.FirstPhotoPath != null)
+                {
+                    <img class="card-img-top" src="@Url.Content(recipe.FirstPhotoPath)" />
+                }
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">@Html.ActionLink(recipe.Title, "Details", "Recipes", new { id = recipe.Id, @class = "card-text" }, null)</h5>
+                    @if (!string.IsNullOrWhiteSpace(recipe.AuhtorId))
+                    {
+                        <h6 class="card-subtitle fw-bold">@Html.ActionLink(recipe.AuthorName, "UserProfile", "Users", new { id = recipe.AuhtorId, @class = "card-text" }, null)</h6>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+    <div id="pagination-container">
+        @Html.PagedListPager(Model.LikedRecipes, page => Url.Action("GetRecipes", new { Id = Model.Id, page = page, sortOrder = ViewBag.sortOrder }))
+    </div>
+}

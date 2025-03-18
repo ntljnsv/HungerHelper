@@ -1,0 +1,378 @@
+﻿@model IEnumerable<Recipes.Models.RecipeUtil.RecipeBasicsDTO>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+
+<div id="searchAndResults" class="d-grid gap-3">
+
+    <div class="container p-4" id="head">
+        <h1 class="text-center fw-bolder">Hunger Helper</h1>
+        <p class="text-center">Cure your hunger with just a few clicks</p>
+    </div>
+
+    <div class="input-group mb-3 text-center w-75" id="search-container">
+        <input class="form-control mw-100 w-50" placeholder="Search recipes..." type="text" id="search-query" />
+        <button type="button" class="btn btn-dark" onclick="searchRecipes()" id="search-btn">Seach</button>
+    </div>
+
+    <aside class="p-3">
+        <h4 class="text-center p-3 fw-bold">Find a recipe perfect for you</h4>
+        <hr/>
+        <div>
+            <h5 class="fw-bold">Meal categories</h5>
+            <div id="categories">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="Breakfast" name="category" />
+                    <label class="form-label" for="Breakfast"><i class="fa-solid fa-mug-saucer"></i> Breakfast</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="Lunch" name="category" />
+                    <label class="form-label" for="Lunch"><i class="fa-solid fa-bread-slice"></i> Lunch</label>
+                </div> 
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="Dinner" name="category" />
+                    <label class="form-label" for="Dinner"><i class="fa-solid fa-drumstick-bite"></i> Dinner</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="Dessert" name="category" />
+                    <label class="form-label" for="Dessert"><i class="fa-solid fa-cake-candles"></i> Dessert</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="Snack" name="category" />
+                    <label class="form-label" for="Snack"><i class="fa-solid fa-cookie-bite"></i> Snack</label>
+                </div>
+                
+            </div>
+        </div>
+
+        <hr />
+        <div>
+            <h5 class="fw-bold">Ingredients</h5>
+            <div id="ingredient-filter">
+                <div id="ing-checkbox"></div>
+            </div>
+        </div>
+
+        <hr />
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-danger" type="button" onclick="clearFilters()" id="reset-filter-btn">Reset filters</button>
+            <button class="btn btn-dark" type="button" onclick="filterRecipes()" id="filter-btn">Search</button>
+        </div>
+    </aside>
+
+    <div id="recipes" class="container d-flex flex-wrap justify-content-center">
+        @foreach (var item in Model)
+        {
+            <div class="card w-75 m-2" onclick="toRecipe(@item.Id)">
+                @if (item.FirstPhotoPath != null)
+                {
+                    <img class="card-img-top" src="@item.FirstPhotoPath" />
+                }
+                <div class="card-body">
+                    <h4 class="card-title"><a class="fw-bold" href="@("/Recipes/Details/"+item.Id)">@item.Title</a></h4>
+                    @if (!string.IsNullOrWhiteSpace(item.AuhtorId))
+                    {
+                        <h5 class="card-subtitle">@Html.ActionLink(item.AuthorName, "UserProfile", "Users", new { id = item.AuhtorId }, null)</h5>
+                    }
+                    <div class="d-grid recipe-info">
+                        <div class="card-text"><i>Number of servings:</i> @item.NumServings</div>
+                        <div class="card-text text-end"><i>Number of Likes:</i> @item.LikeCount</div>
+                        <div class="card-text"><i>Time needed:</i> @item.TimeNeeded</div>
+                        <div class="text-end">
+                            <button type="button" class="btn view-btn fw-bold">@Html.ActionLink("View Recipe", "Details", new { id = item.Id })</button>
+                        </div>
+                    </div>
+
+
+                </div>
+
+            </div>
+        }
+    </div>
+
+
+</div>
+
+
+
+
+
+
+<style>
+    #head {
+        grid-column-start: 2;
+    }
+    #searchAndResults {
+        grid-template-columns: 1fr 4fr;
+    }
+    aside {
+        background-color: #ffeb98;
+        grid-row-start: 1;
+        grid-row-end: 4;
+    }
+
+    #search-container > button {
+        width: 15%;
+    }
+    .body-content {
+        margin-top: 0!important;
+        margin-left: 0 !important;
+        max-width: 100% !important;
+        padding-left: 0!important;
+    }
+    #search-container {
+        grid-column-start: 2;
+        grid-column-end: 5;
+        height: 5vh!important;
+        margin-bottom: 3vh;
+        justify-self: center;
+    }
+    .recipe-info {
+        grid-template: "a b";
+    }
+    .card:hover {
+        transform: scale(0.98);
+    }
+    .card {
+        background-color: #fef4ef;
+        max-height: 49vh;
+        height: fit-content;
+    }
+    .card-body {
+        padding-left: 3vw!important;
+        padding-right: 3vw!important;
+    }
+    .btn-danger {
+        background-color: #8c7678 !important;
+        border-color: #8c7678!important;
+    }
+    .btn-danger:hover {
+        background-color: #978789 !important;
+        border-color: #978789 !important;
+    }
+    .form-check-input:checked {
+        border-color: #dc3545 !important;
+        background-color: #dc3545 !important;
+    }
+    .form-check-input:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.25rem #e3a8ae;
+    }
+    .card-img-top {
+        width: 100%!important;
+        height: 25vh!important;
+        object-fit: cover!important;
+    }
+    .view-btn {
+        background-color: #F9BB9D !important;
+        border-color: #F9BB9D!important;
+    }
+    .view-btn:hover {
+        background-color: #f7d0bd !important;
+        border-color: #f7d0bd !important;
+    }
+    #searchAndResults a {
+        color: #3d171b;
+        text-decoration: none!important;
+    }
+    .card-subtitle a {
+        color: #5a383b !important;
+    }
+    #recipes {
+        min-height: 78vh!important;
+    }
+</style>
+
+
+@section Scripts {
+    <script>
+
+        function toRecipe(id) {
+            window.location = `/Recipes/Details/${id}`
+        }
+
+        function getIngredients() {
+            let url = "/api/IngredientsAPI/all-ingredients";
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error("Response for ingredients not ok");
+                }
+                return response.json();
+            }).then(data => {
+                if (data.length == 0) console.log("no data");
+                populateCheckbox(data);
+
+            }).catch(err => {
+                console.log(err);
+            })
+        }
+
+        function populateCheckbox(data) {
+            var container = document.getElementById("ing-checkbox");
+            data.forEach(i => {
+                var div = document.createElement("div");
+                div.classList.add("form-check");
+                div.innerHTML = `<input value=${i.Id} class="form-check-input" id=${i.Name} type="checkbox" name="ingredients"/>` +
+                    `<label class="form-check-label" for=${i.Name}>${i.Name}</label>`
+                container.appendChild(div);
+            })
+        }
+
+        function createRecipeCard(data) {
+            var card = document.createElement("div");
+            card.id = data.Id;
+            card.classList.add("card", "w-75", "m-2");
+            card.onclick = () => toRecipe(data.Id)
+            if (data.FirstPhotoPath != null) {
+                var baseUrl = window.location.origin;
+                var imgPath = baseUrl + data.FirstPhotoPath;
+                card.innerHTML = `<img class="card-img-top" src="${imgPath}"/>`;
+            }
+            card.innerHTML += `<div class="card-body"><h4 class="card-title"><a class="fw-bold" href="/Recipes/Details/${data.Id}">${data.Title}</a></h4>` +
+                `<h5 class="card-subtitle"><a href="/Users/UserProfile/${data.AuthorId}">${data.AuthorName}</a></h5>` +
+                `<div class="d-grid recipe-info">` +
+                `<div class="card-text"><i>Number of Servings:</i> ${data.NumServings}</div>` +
+                `<div class="card-text text-end"><i>Number of Likes:</i> ${data.LikeCount}</div>` +
+                `<div class="card-text"><i>Time Needed:</i> ${data.TimeNeeded}</div>` +
+                `<div class="text-end">` +
+                `<button type="button" class="btn view-btn fw-bold"><a href="/Recipes/Details/${data.Id}">View Recipe</a></button>` +
+                `</div></div>`;
+
+            return card;
+        }
+
+        function addRecipes(data) {
+            var container = document.getElementById("recipes");
+            container.innerHTML = "";
+            if (data == null || data.length == 0) {
+                return;
+            }
+            data.forEach(r => {
+                var card = createRecipeCard(r);
+                container.appendChild(card);
+            })
+        }
+
+
+        function resetRecipes() {
+            resetIngredientsAndCat();
+            var query = document.getElementById("search-query");
+            query.value = "";
+            let url = "/api/RecipesAPI/all-recipes";
+            fetch(url, {
+                method: "GET",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error("Response not ok");
+                }
+                return response.json();
+            }).then(data => {
+                addRecipes(data);
+            }).catch(err => {
+                console.log(err);
+            });
+        }
+
+        function clearFilters() {
+            resetIngredientsAndCat();
+            var query = document.getElementById("search-query").value;
+            if (query != "") {
+                searchAndFilter(query, null, null);
+            } else {
+                resetRecipes();
+            }
+        }
+
+        function searchAndFilter(query, ids, category) {
+            let requestData = {
+                query: query,
+                ingredientIds: ids,
+                category: category
+            }
+            let url = "/api/RecipesAPI/search-filter";
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error("Response not ok");
+                }
+                return response.json();
+            }).then(data => {
+                addRecipes(data);
+            }).catch(err => {
+                console.log(err);
+            });
+        }
+
+        function getFilters() {
+            var ingredients = document.getElementsByName("ingredients");
+            var ids = [];
+            ingredients.forEach(i => {
+                if (i.checked == true) {
+                    ids.push(parseInt(i.value));
+                }
+            });
+            return ids;
+        }
+
+        function getCategory() {
+            var cat = document.getElementsByName("category");
+            for (var i = 0; i < cat.length; i++) {
+                if (cat[i].checked == true) {
+                    return cat[i].id;
+                }
+            }
+            return null;
+        }
+
+        function filterRecipes() {
+            var ids = getFilters();
+            var category = getCategory();
+            if (ids.length == 0 && category == null) {
+                return;
+            }
+            var query = document.getElementById("search-query").value;
+            query = query == "" ? null : query;
+            searchAndFilter(query, ids, category);
+        }
+
+        function resetIngredientsAndCat() {
+            var filters = document.getElementsByName("ingredients");
+            filters.forEach(f => f.checked = false);
+            var cat = document.getElementsByName("category");
+            cat.forEach(c => c.checked = false);
+        }
+
+        function searchRecipes() {
+            resetIngredientsAndCat();
+            var query = document.getElementById("search-query").value;
+            if (query == null || query == "") {
+                resetRecipes();
+                return;
+            }
+            searchAndFilter(query, null, null);
+        }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            getIngredients();
+        })
+
+
+
+    </script>
+}
